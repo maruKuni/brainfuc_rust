@@ -31,13 +31,15 @@ impl BFInterpreter {
             ',' => self.comma(),
             '[' => self.lbracket(),
             ']' => self.rbracket(),
-            _ => {}
+            _ => {
+                self.tape_index += 1;
+            }
         };
     }
     fn langle(&mut self) {
         // processing '>'
         self.memory_index += 1;
-        if (self.memory_index >= self.memory.len()) {
+        if self.memory_index >= self.memory.len() {
             self.memory.push(0);
         }
         self.tape_index += 1;
@@ -101,7 +103,7 @@ impl BFInterpreter {
     }
     fn paired_bracket(&self, bracket_index: usize, bracket_type: BracketPair) -> Option<usize> {
         // return paired brakcet index of `bracket_index`
-        let mut index_stack = vec![0usize];
+        let mut index_stack = Vec::<usize>::new();
         for index in 0..self.tape.len() {
             let index_char = self.tape.chars().nth(index).unwrap();
 
@@ -132,4 +134,12 @@ impl BFInterpreter {
 enum BracketPair {
     LEFT,
     RIGHT,
+}
+#[test]
+fn test_paired_bracket() {
+    let instance = BFInterpreter::new("[[[][]]>>>]");
+    assert_eq!(instance.paired_bracket(0, BracketPair::LEFT).unwrap(), 10);
+    assert_eq!(instance.paired_bracket(1, BracketPair::LEFT).unwrap(), 6);
+    assert_eq!(instance.paired_bracket(3, BracketPair::RIGHT).unwrap(), 2);
+    assert_eq!(instance.paired_bracket(10, BracketPair::RIGHT).unwrap(), 0);
 }
