@@ -1,3 +1,6 @@
+use std::io::Write;
+
+#[derive(Debug)]
 pub struct BFInterpreter {
     tape: String,
     memory: Vec<u8>,
@@ -18,6 +21,9 @@ impl BFInterpreter {
     pub fn run(&mut self) {
         loop {
             self.step_execute();
+            if self.tape_index >= self.tape.len() {
+                return;
+            }
         }
     }
     fn step_execute(&mut self) {
@@ -58,7 +64,7 @@ impl BFInterpreter {
     fn minus(&mut self) {
         // processing '-'
         let index = self.memory_index;
-        self.memory[index] += 1;
+        self.memory[index] -= 1;
         self.tape_index += 1;
     }
     fn period(&mut self) {
@@ -66,6 +72,7 @@ impl BFInterpreter {
         let index = self.memory_index;
         let c = self.memory[index] as char;
         print!("{}", c);
+        std::io::stdout().flush().unwrap();
         self.tape_index += 1;
     }
     fn comma(&mut self) {
@@ -83,6 +90,7 @@ impl BFInterpreter {
         // processing '['
         let index = self.memory_index;
         if self.memory[index] != 0 {
+            self.tape_index += 1;
             return;
         }
         let paired_index = self
@@ -94,6 +102,7 @@ impl BFInterpreter {
         // processing ']'
         let index = self.memory_index;
         if self.memory[index] == 0 {
+            self.tape_index += 1;
             return;
         }
         let paired_index = self
@@ -142,4 +151,19 @@ fn test_paired_bracket() {
     assert_eq!(instance.paired_bracket(1, BracketPair::LEFT).unwrap(), 6);
     assert_eq!(instance.paired_bracket(3, BracketPair::RIGHT).unwrap(), 2);
     assert_eq!(instance.paired_bracket(10, BracketPair::RIGHT).unwrap(), 0);
+}
+#[test]
+fn test_operation() {
+    let mut instance = BFInterpreter::new("++>+++++[<+>-]");
+    instance.run();
+    println!("{:?}", instance.memory);
+    assert_eq!(instance.memory[0], 7);
+    assert_eq!(instance.memory[1], 0);
+}
+#[test]
+fn test_product() {
+    let tape = "++>+++++[<+>-]++++ ++++ [ < +++ +++ > -] <";
+    let mut instance = BFInterpreter::new(tape);
+    instance.run();
+    assert_eq!(instance.memory[0] as char, '7');
 }
